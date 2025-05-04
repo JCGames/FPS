@@ -1,4 +1,7 @@
+using System;
 using UnityEngine;
+using UnityEngine.UIElements;
+using Cursor = UnityEngine.Cursor;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMotor : MonoBehaviour
@@ -8,79 +11,114 @@ public class PlayerMotor : MonoBehaviour
 	
 	private CharacterController _motor;
 
-	private float _cameraRotX = 0;
-	private float _angularVelocity = 0;
-
+	private float _cameraRotX;
+	private Vector3 _velocity;
+	private float _mouseX;
+	private float _mouseY;
+	private bool _jumpKeyPressed;
+	private bool _playerGrounded;
+	
 	private void Awake()
 	{
 		_motor = GetComponent<CharacterController>();
 
 		if (_settings.LockCursorOnAwake)
+		{
 			Cursor.lockState = CursorLockMode.Locked;
+			Cursor.visible = false;
+		}
 	}
 
 	private void Update()
 	{
+		_playerGrounded = _motor.isGrounded;
+		_mouseY = Input.GetAxis("Mouse Y");
+		_mouseX = Input.GetAxis("Mouse X");
+		
+		// only want to jump if we are grounded
+		if (_settings.CanJump && _playerGrounded && Input.GetKeyDown(_settings.JumpKey))
+		{
+			_jumpKeyPressed = true;
+		}
+		
 		HandleGravityAndJump();
 		HandlePosition();
 		HandleCameraAndBodyRotation();
-
-		if (Input.GetKeyDown(KeyCode.Escape))
-		{
-			Cursor.lockState = CursorLockMode.None;
-			Cursor.visible = true;
-		}
 	}
-
+	
 	private void OnApplicationFocus(bool focus)
 	{
 		if (_settings.LockCursorOnFocus)
+		{
 			Cursor.lockState = CursorLockMode.Locked;
+			Cursor.visible = false;
+		}
 	}
-	
+
+	// for debugging
+	// private void OnGUI()
+	// {
+	// 	GUILayout.Label("IsGrounded: " + _motor.isGrounded);
+	// 	Physics.Raycast(transform.position, Vector3.down, out var hit, Mathf.Infinity, LayerMask.GetMask("Ground"));
+	// 	GUILayout.Label("Distance From Ground: " + hit.distance);
+	// }
+
 	private void HandleGravityAndJump()
 	{
-		if (!_settings.CanJump) return;
-		
-		if (_motor.isGrounded)
+		if (_playerGrounded)
 		{
-			_angularVelocity = -0.01f;
-
-			if (Input.GetKeyDown(_settings.JumpKey))
+			// add a sticky force to make our player stick to the ground
+			// should improve behaviour on downwards slopes
+			_velocity.y = -0.01f;
+			
+			if (_jumpKeyPressed)
 			{
-				_angularVelocity = _settings.JumpForce;
+				// apply a jump force to the player
+				_velocity.y = Mathf.Sqrt(_settings.JumpForce * 2.0f * _settings.Gravity);
+				_jumpKeyPressed = false;
 			}
 		}
 		else
 		{
-			_angularVelocity -= _settings.Gravity * Time.deltaTime;
+			// apply gravity to the player
+			_velocity.y -= _settings.Gravity * Time.deltaTime;
 		}
 	}
 
 	private void HandlePosition()
 	{
-		var move = new Vector3(Input.GetAxis("Horizontal"), _angularVelocity, Input.GetAxis("Vertical"));
-
-		move.x *= _settings.HorizontalMovementWeight * _settings.MovementSpeed * Time.deltaTime;
-		move.z *= _settings.VerticalMovementWeight * _settings.MovementSpeed * Time.deltaTime;
-
-		// NOTE: a better design needs to be implemented here.
-		//if (move.x != 0 && move.z != 0)
-		//{
-		//	move.x *= 0.5f;
-		//	move.z *= 0.5f;
-		//}
-
-		_motor.Move(transform.TransformDirection(move));
+		// this is just our input vector
+		var move = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+		
+		// prevents diagonal movements from being faster than regular movements
+		move = Vector3.ClampMagnitude(move, 1);
+		
+		// this is our velocity vector
+		var finalMove = new Vector3
+		{
+			x = move.x * _settings.HorizontalMovementWeight * _settings.MovementSpeed,
+			y = _velocity.y,
+			z = move.z * _settings.VerticalMovementWeight * _settings.MovementSpeed
+		};
+		
+		// transform this final move vector into world space making
+		// its forward direction our forward direction 
+		finalMove = transform.TransformDirection(finalMove);
+		
+		_motor.Move(finalMove * Time.deltaTime);
 	}
 
 	private void HandleCameraAndBodyRotation()
 	{
-		var input = new Vector2(Input.GetAxis("Mouse Y"), Input.GetAxis("Mouse X"));
-
+		var input = new Vector2(_mouseY, _mouseX);
+		
+		// clamp the extents of the cameras up and down look axis
 		_cameraRotX = Mathf.Clamp(_cameraRotX - input.x, _settings.MinCameraTilt, _settings.MaxCameraTilt);
+		
+		// rotate the player around the y axis
 		transform.Rotate(0, input.y, 0);
 
+		// rotate the camera around the x axis
 		_camera.localRotation = Quaternion.Euler(_cameraRotX, _camera.localEulerAngles.y, _camera.localEulerAngles.z);
 	}
 }

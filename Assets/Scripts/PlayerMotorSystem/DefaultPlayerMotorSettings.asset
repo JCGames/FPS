@@ -19,7 +19,7 @@ MonoBehaviour:
   VerticalMovementWeight: 1
   HorizontalMovementWeight: 0.8
   JumpKey: 32
-  JumpForce: 0.02
-  Gravity: 0.05
+  JumpForce: 2
+  Gravity: 9.8
   MinCameraTilt: -90
   MaxCameraTilt: 90
