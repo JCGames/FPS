@@ -364,6 +364,7 @@ GameObject:
   m_Component:
   - component: {fileID: 972265886}
   - component: {fileID: 972265885}
+  - component: {fileID: 972265887}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -391,7 +392,7 @@ MonoBehaviour:
   offlineScene: 
   onlineScene: 
   offlineSceneLoadDelay: 0
-  transport: {fileID: 0}
+  transport: {fileID: 972265887}
   networkAddress: localhost
   maxConnections: 100
   disconnectInactiveConnections: 0
@@ -431,6 +432,35 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &972265887
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 972265884}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b0fecffa3f624585964b0d0eb21b18e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  port: 7777
+  DualMode: 1
+  NoDelay: 1
+  Interval: 10
+  Timeout: 10000
+  RecvBufferSize: 7361536
+  SendBufferSize: 7361536
+  FastResend: 2
+  ReceiveWindowSize: 4096
+  SendWindowSize: 4096
+  MaxRetransmit: 40
+  MaximizeSocketBuffers: 1
+  ReliableMaxMessageSize: 297433
+  UnreliableMaxMessageSize: 1194
+  debugLog: 0
+  statisticsGUI: 0
+  statisticsLog: 0
 --- !u!1 &1280206181
 GameObject:
   m_ObjectHideFlags: 0
@@ -495,7 +525,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 16abb60b2f9d54b80a52ff3d0159afeb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  findGamePage: {fileID: 0}
+  findGamePage: {fileID: 740726969}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

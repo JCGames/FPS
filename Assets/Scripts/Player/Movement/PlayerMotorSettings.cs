@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "PlayerMotorSettings", menuName = "Beyond Earth Games/Player/Player Motor Settings")]
+[CreateAssetMenu(fileName = "PlayerMotorSettings", menuName = "Player/Movement/Player Motor Settings")]
 public class PlayerMotorSettings : ScriptableObject
 {
 	public bool LockCursorOnAwake = false;
