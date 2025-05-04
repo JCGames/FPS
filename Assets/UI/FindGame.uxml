@@ -1,0 +1,9 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement name="Background" style="flex-grow: 1; background-image: url(&quot;project://database/Assets/Sprites/menu_background.jpg?fileID=2800000&amp;guid=06f19f1a7e9ef49e8aefb07bca2c11a6&amp;type=3#menu_background&quot;);">
+        <ui:MultiColumnListView style="flex-grow: 1;" />
+        <ui:VisualElement style="flex-grow: 0; height: 15%; flex-direction: row; justify-content: space-around; align-content: center; align-self: center; align-items: center; left: auto; right: auto; width: 100%;">
+            <ui:Button text="Back" style="margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; width: 40%; height: 65%;" />
+            <ui:Button text="Refresh" style="width: 40%; height: 65%;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
