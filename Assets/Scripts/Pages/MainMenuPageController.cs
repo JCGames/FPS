@@ -1,3 +1,4 @@
+using System;
 using FPS.UI.Pages;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -7,7 +8,7 @@ public class MainMenuPageController : BasePage
 {
     public BasePage findGamePage;
     
-    protected void Awake()
+    protected void OnEnable()
     {
         var doc = gameObject.GetComponent<UIDocument>();
         

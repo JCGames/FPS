@@ -8,7 +8,7 @@ public class FindGamePageController : BasePage
 {
     public BasePage mainMenuPage;
 
-    private void Awake()
+    private void OnEnable()
     {
         var doc = gameObject.GetComponent<UIDocument>();
         
