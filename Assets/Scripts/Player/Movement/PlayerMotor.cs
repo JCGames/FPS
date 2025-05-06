@@ -8,11 +8,13 @@ public class PlayerMotor : MonoBehaviour
 {
 	[SerializeField] private PlayerMotorSettings _settings;
 	[SerializeField] private Transform _camera;
+	[SerializeField] private bool _debug;
 	
 	private CharacterController _motor;
 
 	private float _cameraRotX;
 	private Vector3 _velocity;
+	private Vector3 _velocitySmoothed;
 	private float _mouseX;
 	private float _mouseY;
 	private bool _jumpKeyPressed;
@@ -54,14 +56,18 @@ public class PlayerMotor : MonoBehaviour
 			Cursor.visible = false;
 		}
 	}
-
-	// for debugging
-	// private void OnGUI()
-	// {
-	// 	GUILayout.Label("IsGrounded: " + _motor.isGrounded);
-	// 	Physics.Raycast(transform.position, Vector3.down, out var hit, Mathf.Infinity, LayerMask.GetMask("Ground"));
-	// 	GUILayout.Label("Distance From Ground: " + hit.distance);
-	// }
+	
+	private void OnGUI()
+	{
+		if (_debug)
+		{
+			GUILayout.Label("IsGrounded: " + _motor.isGrounded);
+			Physics.Raycast(transform.position, Vector3.down, out var hit, Mathf.Infinity, LayerMask.GetMask("Ground"));
+			GUILayout.Label("Distance From Ground: " + hit.distance);
+			
+			GUILayout.Label("Velocity: " + _velocity);
+		}
+	}
 
 	private void HandleGravityAndJump()
 	{
@@ -93,8 +99,20 @@ public class PlayerMotor : MonoBehaviour
 		// prevents diagonal movements from being faster than regular movements
 		move = Vector3.ClampMagnitude(move, 1);
 		
+		if (!_playerGrounded)
+		{
+			move = transform.TransformDirection(move);
+			
+			_velocitySmoothed.x = Mathf.Lerp(_velocitySmoothed.x, _velocity.x, Time.deltaTime * 500f) + move.x * _settings.MovementSpeed * 0.25f;
+			_velocitySmoothed.y = _velocity.y;
+			_velocitySmoothed.z = Mathf.Lerp(_velocitySmoothed.z, _velocity.z, Time.deltaTime * 500f) + move.z * _settings.MovementSpeed * 0.25f;
+			
+			_motor.Move(_velocitySmoothed * Time.deltaTime);
+			return;
+		}
+		
 		// this is our velocity vector
-		var finalMove = new Vector3
+		var velocity = new Vector3
 		{
 			x = move.x * _settings.HorizontalMovementWeight * _settings.MovementSpeed,
 			y = _velocity.y,
@@ -103,9 +121,14 @@ public class PlayerMotor : MonoBehaviour
 		
 		// transform this final move vector into world space making
 		// its forward direction our forward direction 
-		finalMove = transform.TransformDirection(finalMove);
+		velocity = transform.TransformDirection(velocity);
+		_velocity = velocity;
 		
-		_motor.Move(finalMove * Time.deltaTime);
+		_velocitySmoothed.x = Mathf.Lerp(_velocitySmoothed.x, _velocity.x, Time.deltaTime * 500f);
+		_velocitySmoothed.y = _velocity.y;
+		_velocitySmoothed.z = Mathf.Lerp(_velocitySmoothed.z, _velocity.z, Time.deltaTime * 500f);
+		
+		_motor.Move(_velocitySmoothed * Time.deltaTime);
 	}
 
 	private void HandleCameraAndBodyRotation()
