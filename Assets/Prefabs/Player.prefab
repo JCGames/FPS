@@ -5204,7 +5204,7 @@ GameObject:
   - component: {fileID: 5697142477834449208}
   - component: {fileID: 1406199230191438902}
   m_Layer: 7
-  m_Name: MiniGun
+  m_Name: GatlingGun
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5589,6 +5589,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _settings: {fileID: 11400000, guid: 5d08fc4d1fcf19c438799dc0cf0f7fe8, type: 2}
   _camera: {fileID: 2078175878165851073}
+  _debug: 1
 --- !u!1 &4728970350890305282
 GameObject:
   m_ObjectHideFlags: 0

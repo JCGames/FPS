@@ -9,6 +9,8 @@ public class GunSettings : ScriptableObject
     public int bulletDamage = 10;
     public GameObject bulletImpactParticleSystem;
     public GameObject bulletImpactDecal;
+    public BulletTrail bulletTrail;
+    public int totalAmmo = 100;
     
     [Header("Raycast Settings")]
     public bool isRaycasted;

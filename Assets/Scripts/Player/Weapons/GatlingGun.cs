@@ -11,7 +11,7 @@ public class GatlingGun : Gun
     
     protected override void OnUpdate()
     {
-        if (Input.GetMouseButton(0))
+        if (_currentAmmo > 0 && Input.GetMouseButton(0))
         {
             _rotationalVelocity = Mathf.Lerp(_rotationalVelocity, _speed, Time.deltaTime * _speedUpSpeed);
         }

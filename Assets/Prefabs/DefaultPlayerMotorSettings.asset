@@ -15,7 +15,7 @@ MonoBehaviour:
   LockCursorOnAwake: 1
   LockCursorOnFocus: 1
   CanJump: 1
-  MovementSpeed: 10
+  MovementSpeed: 6
   VerticalMovementWeight: 1
   HorizontalMovementWeight: 0.8
   JumpKey: 32

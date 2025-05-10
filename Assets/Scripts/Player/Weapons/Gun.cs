@@ -1,17 +1,22 @@
-using System;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 public class Gun : Weapon
 {
-    [SerializeField] private GunSettings _settings;
-    [SerializeField] private Transform _cameraTransform;
-    [SerializeField] private Transform _muzzle;
-    [SerializeField] private ParticleSystem _muzzleFlashParticleSystem;
+    [SerializeField] protected GunSettings _settings;
+    [SerializeField] protected Transform _cameraTransform;
+    [SerializeField] protected Transform _muzzle;
+    [SerializeField] protected ParticleSystem _muzzleFlashParticleSystem;
+    [SerializeField] private bool _debug;
     
     private float _lastFireTimeStamp;
+    protected int _currentAmmo;
+
+    private void Awake()
+    {
+        _currentAmmo = _settings.totalAmmo;
+    }
     
-    public void Update()
+    private void Update()
     {
         if (_settings.isSemiAutomatic)
         {
@@ -29,35 +34,68 @@ public class Gun : Weapon
                 Fire();
             }
         }
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            _currentAmmo = _settings.totalAmmo;
+        }
         
         OnUpdate();
     }
 
-    protected virtual void OnUpdate() 
-    { }
+    private void OnGUI()
+    {
+        if (_debug)
+        {
+            GUILayout.Label($"Ammo: {_currentAmmo}/{_settings.totalAmmo}");
+        }
+    }
 
     private void Fire()
     {
+        // no more ammo
+        if (_currentAmmo <= 0) return;
+        
         if (_settings.isRaycasted)
         {
             Physics.Raycast(_cameraTransform.position, _cameraTransform.forward, out RaycastHit hit, _settings.raycastDistance, ~LayerMask.GetMask("Player"));
 
-            if (hit.collider is not null && hit.collider.TryGetComponent<Health>(out var health))
+            if (hit.collider is not null)
             {
-                health.Damage(_settings.bulletDamage);
+                if (hit.collider.TryGetComponent<Health>(out var health))
+                {
+                    health.Damage(_settings.bulletDamage);
+                }
+                
+                if (_settings.bulletTrail is not null)
+                {
+                    Instantiate(_settings.bulletTrail, _muzzle.position, Quaternion.identity).destination = hit.point;
+                }
+                
+                if (_settings.bulletImpactDecal is not null)
+                {
+                    Instantiate(_settings.bulletImpactDecal, hit.point, Quaternion.LookRotation(hit.normal)).transform.SetParent(hit.transform);
+                }
+                
+                if (_settings.bulletImpactParticleSystem is not null)
+                {
+                    Instantiate(_settings.bulletImpactParticleSystem, hit.point, Quaternion.LookRotation(hit.normal)).transform.SetParent(hit.transform);
+                }
+            }
+            else
+            {
+                if (_settings.bulletTrail is not null)
+                {
+                    Instantiate(_settings.bulletTrail, _muzzle.position, Quaternion.identity).destination = _muzzle.position + _muzzle.forward * 10f;
+                }
             }
 
             _muzzleFlashParticleSystem?.Play();
-
-            if (_settings.bulletImpactDecal is not null)
-            {
-                Instantiate(_settings.bulletImpactDecal, hit.point, Quaternion.LookRotation(hit.normal)).transform.SetParent(hit.transform);
-            }
-
-            if (_settings.bulletImpactParticleSystem is not null)
-            {
-                Instantiate(_settings.bulletImpactParticleSystem, hit.point, Quaternion.LookRotation(hit.normal)).transform.SetParent(hit.transform);
-            }
         }
+        
+        _currentAmmo--;
     }
+    
+    protected virtual void OnUpdate() 
+    { }
 }

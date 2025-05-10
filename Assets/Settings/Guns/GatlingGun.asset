@@ -17,5 +17,6 @@ MonoBehaviour:
   bulletDamage: 10
   bulletImpactParticleSystem: {fileID: 100002, guid: 56bfc2f4b4a0c534c8ef3d0fd1124c44, type: 3}
   bulletImpactDecal: {fileID: 100002, guid: 2f9348d6583cde14eb0d82bb9732647e, type: 3}
+  bulletTrail: {fileID: 1704894228497279880, guid: c848f2a90b6e2234d82346c80747962a, type: 3}
   isRaycasted: 1
   raycastDistance: 10000
