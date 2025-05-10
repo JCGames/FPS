@@ -1,7 +1,4 @@
-using System;
 using UnityEngine;
-using UnityEngine.UIElements;
-using Cursor = UnityEngine.Cursor;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMotor : MonoBehaviour
@@ -13,12 +10,15 @@ public class PlayerMotor : MonoBehaviour
 	private CharacterController _motor;
 
 	private float _cameraRotX;
-	private Vector3 _velocity;
-	private Vector3 _velocitySmoothed;
-	private float _mouseX;
-	private float _mouseY;
 	private bool _jumpKeyPressed;
+	
 	private bool _playerGrounded;
+	
+	private Vector3 _velocity;
+	private float _friction;
+	
+	private RaycastHit _downHit;
+	private Vector3 _slopeDirection;
 	
 	private void Awake()
 	{
@@ -33,9 +33,8 @@ public class PlayerMotor : MonoBehaviour
 
 	private void Update()
 	{
+		Physics.Raycast(transform.position, Vector3.down, out _downHit, 100F, ~LayerMask.GetMask("Player"));
 		_playerGrounded = _motor.isGrounded;
-		_mouseY = Input.GetAxis("Mouse Y");
-		_mouseX = Input.GetAxis("Mouse X");
 		
 		// only want to jump if we are grounded
 		if (_settings.CanJump && _playerGrounded && Input.GetKeyDown(_settings.JumpKey))
@@ -69,6 +68,15 @@ public class PlayerMotor : MonoBehaviour
 		}
 	}
 
+	private void OnDrawGizmos()
+	{
+		Gizmos.color = Color.red;
+		Gizmos.DrawRay(transform.position, _slopeDirection);
+		Gizmos.color = Color.green;
+		Gizmos.DrawRay(transform.position, Vector3.down * 100f);
+		Gizmos.DrawWireSphere(transform.position + Vector3.down * 100f, 2f);
+	}
+
 	private void HandleGravityAndJump()
 	{
 		if (_playerGrounded)
@@ -98,18 +106,7 @@ public class PlayerMotor : MonoBehaviour
 		
 		// prevents diagonal movements from being faster than regular movements
 		move = Vector3.ClampMagnitude(move, 1);
-		
-		if (!_playerGrounded)
-		{
-			move = transform.TransformDirection(move);
-			
-			_velocitySmoothed.x = Mathf.Lerp(_velocitySmoothed.x, _velocity.x, Time.deltaTime * 500f) + move.x * _settings.MovementSpeed * 0.25f;
-			_velocitySmoothed.y = _velocity.y;
-			_velocitySmoothed.z = Mathf.Lerp(_velocitySmoothed.z, _velocity.z, Time.deltaTime * 500f) + move.z * _settings.MovementSpeed * 0.25f;
-			
-			_motor.Move(_velocitySmoothed * Time.deltaTime);
-			return;
-		}
+		move = transform.TransformDirection(move);
 		
 		// this is our velocity vector
 		var velocity = new Vector3
@@ -119,29 +116,56 @@ public class PlayerMotor : MonoBehaviour
 			z = move.z * _settings.VerticalMovementWeight * _settings.MovementSpeed
 		};
 		
+		if (_playerGrounded)
+		{
+			_friction = _settings.groundFriction;
+			
+			var (dir, angle) = SlopeDirection();
+			
+			if (angle > 110)
+			{
+				velocity = dir * 10f;
+				_slopeDirection = velocity;
+				_friction = 50f;
+			}
+		}
+		else
+		{
+			_friction = _settings.airFriction;
+		}
+
+		// var distance = Vector3.Distance(_velocity, velocity);
+		//
+		// if (distance > 0)
+		// {
+		// 	_friction /= distance;
+		// }
+		
+		_velocity = Vector3.MoveTowards(_velocity, velocity, _friction * Time.deltaTime);
+		
 		// transform this final move vector into world space making
-		// its forward direction our forward direction 
-		velocity = transform.TransformDirection(velocity);
-		_velocity = velocity;
-		
-		_velocitySmoothed.x = Mathf.Lerp(_velocitySmoothed.x, _velocity.x, Time.deltaTime * 500f);
-		_velocitySmoothed.y = _velocity.y;
-		_velocitySmoothed.z = Mathf.Lerp(_velocitySmoothed.z, _velocity.z, Time.deltaTime * 500f);
-		
-		_motor.Move(_velocitySmoothed * Time.deltaTime);
+		// its forward direction our forward direction
+		_motor.Move(_velocity * Time.deltaTime);
 	}
 
 	private void HandleCameraAndBodyRotation()
 	{
-		var input = new Vector2(_mouseY, _mouseX);
+		var mouse = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
 		
 		// clamp the extents of the cameras up and down look axis
-		_cameraRotX = Mathf.Clamp(_cameraRotX - input.x, _settings.MinCameraTilt, _settings.MaxCameraTilt);
+		_cameraRotX = Mathf.Clamp(_cameraRotX - mouse.y, _settings.MinCameraTilt, _settings.MaxCameraTilt);
 		
 		// rotate the player around the y axis
-		transform.Rotate(0, input.y, 0);
+		transform.Rotate(0, mouse.x, 0);
 
 		// rotate the camera around the x axis
 		_camera.localRotation = Quaternion.Euler(_cameraRotX, _camera.localEulerAngles.y, _camera.localEulerAngles.z);
+	}
+
+	private (Vector3 direction, float angle) SlopeDirection()
+	{
+		var downSlope = Vector3.Cross(_downHit.normal, Vector3.up);
+		downSlope = Vector3.Cross(_downHit.normal, downSlope);
+		return (downSlope, Vector3.Angle(downSlope, Vector3.up));
 	}
 }

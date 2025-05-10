@@ -16,6 +16,8 @@ public class PlayerMotorSettings : ScriptableObject
 	public KeyCode JumpKey = KeyCode.Space;
 	public float JumpForce = 0.02F;
 	public float Gravity = 0.05F;
+	public float airFriction = 1F;
+	public float groundFriction = 10F;
 
 	[Space(10)]
 	public float MinCameraTilt = -90F;

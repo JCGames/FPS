@@ -21,5 +21,7 @@ MonoBehaviour:
   JumpKey: 32
   JumpForce: 2
   Gravity: 9.8
+  airFriction: 3
+  groundFriction: 20
   MinCameraTilt: -90
   MaxCameraTilt: 90

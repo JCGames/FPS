@@ -5203,6 +5203,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5697142477834449208}
   - component: {fileID: 1406199230191438902}
+  - component: {fileID: 3900597876434147241}
   m_Layer: 7
   m_Name: GatlingGun
   m_TagString: Untagged
@@ -5244,11 +5245,57 @@ MonoBehaviour:
   _cameraTransform: {fileID: 5921535506521947852}
   _muzzle: {fileID: 7677844808558495159}
   _muzzleFlashParticleSystem: {fileID: 1783340938216585438}
+  _debug: 1
   _barrel: {fileID: 8645462879382335290}
   _slowDownSpeed: 1
   _speedUpSpeed: 5
   _speed: 1000
   _rotationalVelocity: 0
+--- !u!114 &3900597876434147241
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2316299854743850758}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3187c0fcea646344fb6deb5766ab1bc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  weaponTransform: {fileID: 5697142477834449208}
+  swaySmooth: 8
+  swayDamp: 2
+  posToRotAmount: 1
+  rotToPosAmount: 0.1
+  swayOverDistance:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  rotationSwayMultiplier: -0.2
+  maxRotSwayAmount: 5
+  movementSwayMultiplier: -0.05
+  maxPosSwayAmount: 0.01
 --- !u!1 &3769624127870388073
 GameObject:
   m_ObjectHideFlags: 0
@@ -5589,7 +5636,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _settings: {fileID: 11400000, guid: 5d08fc4d1fcf19c438799dc0cf0f7fe8, type: 2}
   _camera: {fileID: 2078175878165851073}
-  _debug: 1
+  _debug: 0
 --- !u!1 &4728970350890305282
 GameObject:
   m_ObjectHideFlags: 0
