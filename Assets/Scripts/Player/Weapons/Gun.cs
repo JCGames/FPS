@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class Gun : Weapon
@@ -15,7 +16,12 @@ public class Gun : Weapon
     {
         _currentAmmo = _settings.totalAmmo;
     }
-    
+
+    private void Start()
+    {
+        GlobalEvents.CallOnAmmoChanged(_settings.totalAmmo, _currentAmmo);
+    }
+
     private void Update()
     {
         if (_settings.isSemiAutomatic)
@@ -38,6 +44,7 @@ public class Gun : Weapon
         if (Input.GetKeyDown(KeyCode.R))
         {
             _currentAmmo = _settings.totalAmmo;
+            GlobalEvents.CallOnAmmoChanged(_settings.totalAmmo, _currentAmmo);
         }
         
         OnUpdate();
@@ -94,6 +101,7 @@ public class Gun : Weapon
         }
         
         _currentAmmo--;
+        GlobalEvents.CallOnAmmoChanged(_settings.totalAmmo, _currentAmmo);
     }
     
     protected virtual void OnUpdate() 
