@@ -24,6 +24,7 @@ public class PlayerMotorSettings : ScriptableObject
 	public float slopeAcceleration = 5f;
 	public float groundRaycastDistance = 10F;
 	public float groundRaycastRadius = 2f;
+	[Range(90, 180)] public float minAngleForSlope = 130F;
 
 	[Space(10)]
 	public float minCameraTilt = -90F;

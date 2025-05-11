@@ -14,9 +14,9 @@ public class PlayerMotor : MonoBehaviour
 	private bool _playerGrounded;
 	
 	private Vector3 _velocity;
+	private Vector3 _lastVelocity;
 	
 	private RaycastHit _downHit;
-	private Vector3 _moveAcceleration;
 	private (Vector3 dir, float angle) _slope;
 	private float _verticalVelocity;
 	
@@ -70,7 +70,7 @@ public class PlayerMotor : MonoBehaviour
 		{
 			GUILayout.Label("IsGrounded: " + _motor.isGrounded);
 			GUILayout.Label("Slope Angle: " + _slope.angle);
-			GUILayout.Label("Velocity: " + _velocity);
+			GUILayout.Label("Velocity: " + transform.InverseTransformDirection(_velocity));
 		}
 	}
 
@@ -114,25 +114,29 @@ public class PlayerMotor : MonoBehaviour
 	private void HandlePosition()
 	{
 		// this is just our input vector
-		_moveAcceleration = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-		_moveAcceleration = Vector3.ClampMagnitude(_moveAcceleration, 1);
-		_moveAcceleration = transform.TransformDirection(AdjustedMovementAcceleration(_moveAcceleration));
+		var moveAcceleration = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+		moveAcceleration = Vector3.ClampMagnitude(moveAcceleration, 1);
+		moveAcceleration = transform.TransformDirection(AdjustedMovementAcceleration(moveAcceleration));
 
 		// normal acceleration * time
-		var normalVelocityDelta = _playerGrounded ? _moveAcceleration * Time.deltaTime : Vector3.zero;
+		var normalVelocityDelta = _playerGrounded ? moveAcceleration * Time.deltaTime : moveAcceleration * (0.1f * Time.deltaTime);
 		
-		var slopeVelocityDelta = _slope.dir * (_slope.angle * 0.00278f * _settings.slopeAcceleration * Time.deltaTime);
+		var slopeVelocityDelta = _slope.angle > _settings.minAngleForSlope ? 
+			_slope.dir * (_slope.angle * 0.00278f * _settings.slopeAcceleration * Time.deltaTime) : 
+			Vector3.zero;
 
 		var frictionalCoefficient = _playerGrounded ? _settings.frictionOnGround : _settings.frictionInAir;
 		
 		// current acceleration * coefficient * time
-		var frictionalVelocityDelta = -_velocity / Time.deltaTime * (frictionalCoefficient * Time.deltaTime);
+		var frictionalVelocityDelta = -_lastVelocity / Time.deltaTime * (frictionalCoefficient * Time.deltaTime);
 		
 		_velocity.y = _verticalVelocity;
 
 		_velocity += normalVelocityDelta + frictionalVelocityDelta + slopeVelocityDelta;
 
 		_motor.Move(_velocity);
+
+		_lastVelocity = _velocity;
 	}
 
 	private Vector3 AdjustedMovementAcceleration(Vector3 movementAcceleration)

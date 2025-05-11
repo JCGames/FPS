@@ -15,17 +15,17 @@ MonoBehaviour:
   lockCursorOnAwake: 1
   lockCursorOnFocus: 1
   canJump: 1
-  movementAcceleration: 4
+  movementAcceleration: 0.5
   verticalAccelerationWeight: 1
-  horizontalAccelerationWeight: 1
-  coefficientOfFrictionOnGround: 0.3
-  coefficientOfFrictionInAir: 0.001
-  coefficientOfFrictionOnSlope: 0.001
+  horizontalAccelerationWeight: 0.8
+  frictionOnGround: 0.03
+  frictionInAir: 0.0001
   jumpKey: 32
   jumpForce: 0.1
   gravity: 0.2
-  slopeAcceleration: 3
+  slopeAcceleration: 2
   groundRaycastDistance: 1
   groundRaycastRadius: 0.45
+  minAngleForSlope: 120
   minCameraTilt: -80
   maxCameraTilt: 80
