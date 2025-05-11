@@ -11,20 +11,20 @@ public class PlayerMotor : MonoBehaviour
 
 	private float _cameraRotX;
 	private bool _jumpKeyPressed;
-	
 	private bool _playerGrounded;
 	
 	private Vector3 _velocity;
-	private float _friction;
 	
 	private RaycastHit _downHit;
-	private Vector3 _slopeDirection;
+	private Vector3 _moveAcceleration;
+	private (Vector3 dir, float angle) _slope;
+	private float _verticalVelocity;
 	
 	private void Awake()
 	{
 		_motor = GetComponent<CharacterController>();
 
-		if (_settings.LockCursorOnAwake)
+		if (_settings.lockCursorOnAwake)
 		{
 			Cursor.lockState = CursorLockMode.Locked;
 			Cursor.visible = false;
@@ -33,11 +33,19 @@ public class PlayerMotor : MonoBehaviour
 
 	private void Update()
 	{
-		Physics.Raycast(transform.position, Vector3.down, out _downHit, 100F, ~LayerMask.GetMask("Player"));
+		if (transform.position.y < -10)
+		{
+			_motor.enabled = false;
+			transform.position = Vector3.up * 10f;
+			_motor.enabled = true;
+		}
+		
+		_slope = SlopeDirection();
+		Physics.SphereCast(transform.position, _settings.groundRaycastRadius, Vector3.down, out _downHit, _settings.groundRaycastDistance, ~LayerMask.GetMask("Player"));
 		_playerGrounded = _motor.isGrounded;
 		
 		// only want to jump if we are grounded
-		if (_settings.CanJump && _playerGrounded && Input.GetKeyDown(_settings.JumpKey))
+		if (_settings.canJump && _playerGrounded && Input.GetKeyDown(_settings.jumpKey))
 		{
 			_jumpKeyPressed = true;
 		}
@@ -49,7 +57,7 @@ public class PlayerMotor : MonoBehaviour
 	
 	private void OnApplicationFocus(bool focus)
 	{
-		if (_settings.LockCursorOnFocus)
+		if (_settings.lockCursorOnFocus)
 		{
 			Cursor.lockState = CursorLockMode.Locked;
 			Cursor.visible = false;
@@ -61,20 +69,22 @@ public class PlayerMotor : MonoBehaviour
 		if (_debug)
 		{
 			GUILayout.Label("IsGrounded: " + _motor.isGrounded);
-			Physics.Raycast(transform.position, Vector3.down, out var hit, Mathf.Infinity, LayerMask.GetMask("Ground"));
-			GUILayout.Label("Distance From Ground: " + hit.distance);
-			
+			GUILayout.Label("Slope Angle: " + _slope.angle);
 			GUILayout.Label("Velocity: " + _velocity);
 		}
 	}
 
 	private void OnDrawGizmos()
 	{
-		Gizmos.color = Color.red;
-		Gizmos.DrawRay(transform.position, _slopeDirection);
-		Gizmos.color = Color.green;
-		Gizmos.DrawRay(transform.position, Vector3.down * 100f);
-		Gizmos.DrawWireSphere(transform.position + Vector3.down * 100f, 2f);
+		if (_debug)
+		{
+			var original = Gizmos.color;
+			Gizmos.color = Color.green;
+
+			Gizmos.DrawRay(transform.position, _velocity);
+			
+			Gizmos.color = original;
+		}
 	}
 
 	private void HandleGravityAndJump()
@@ -83,69 +93,54 @@ public class PlayerMotor : MonoBehaviour
 		{
 			// add a sticky force to make our player stick to the ground
 			// should improve behaviour on downwards slopes
-			_velocity.y = -0.01f;
+			// this is basically the equal and opposite force when an 
+			// object is grounded
+			_verticalVelocity = -0.5f;
 			
 			if (_jumpKeyPressed)
 			{
 				// apply a jump force to the player
-				_velocity.y = Mathf.Sqrt(_settings.JumpForce * 2.0f * _settings.Gravity);
+				_verticalVelocity = _settings.jumpForce;
 				_jumpKeyPressed = false;
 			}
 		}
 		else
 		{
 			// apply gravity to the player
-			_velocity.y -= _settings.Gravity * Time.deltaTime;
+			_verticalVelocity -= _settings.gravity * Time.deltaTime;
 		}
 	}
 
 	private void HandlePosition()
 	{
 		// this is just our input vector
-		var move = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-		
-		// prevents diagonal movements from being faster than regular movements
-		move = Vector3.ClampMagnitude(move, 1);
-		move = transform.TransformDirection(move);
-		
-		// this is our velocity vector
-		var velocity = new Vector3
-		{
-			x = move.x * _settings.HorizontalMovementWeight * _settings.MovementSpeed,
-			y = _velocity.y,
-			z = move.z * _settings.VerticalMovementWeight * _settings.MovementSpeed
-		};
-		
-		if (_playerGrounded)
-		{
-			_friction = _settings.groundFriction;
-			
-			var (dir, angle) = SlopeDirection();
-			
-			if (angle > 110)
-			{
-				velocity = dir * 10f;
-				_slopeDirection = velocity;
-				_friction = 50f;
-			}
-		}
-		else
-		{
-			_friction = _settings.airFriction;
-		}
+		_moveAcceleration = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+		_moveAcceleration = Vector3.ClampMagnitude(_moveAcceleration, 1);
+		_moveAcceleration = transform.TransformDirection(AdjustedMovementAcceleration(_moveAcceleration));
 
-		// var distance = Vector3.Distance(_velocity, velocity);
-		//
-		// if (distance > 0)
-		// {
-		// 	_friction /= distance;
-		// }
+		// normal acceleration * time
+		var normalVelocityDelta = _playerGrounded ? _moveAcceleration * Time.deltaTime : Vector3.zero;
 		
-		_velocity = Vector3.MoveTowards(_velocity, velocity, _friction * Time.deltaTime);
+		var slopeVelocityDelta = _slope.dir * (_slope.angle * 0.00278f * _settings.slopeAcceleration * Time.deltaTime);
+
+		var frictionalCoefficient = _playerGrounded ? _settings.frictionOnGround : _settings.frictionInAir;
 		
-		// transform this final move vector into world space making
-		// its forward direction our forward direction
-		_motor.Move(_velocity * Time.deltaTime);
+		// current acceleration * coefficient * time
+		var frictionalVelocityDelta = -_velocity / Time.deltaTime * (frictionalCoefficient * Time.deltaTime);
+		
+		_velocity.y = _verticalVelocity;
+
+		_velocity += normalVelocityDelta + frictionalVelocityDelta + slopeVelocityDelta;
+
+		_motor.Move(_velocity);
+	}
+
+	private Vector3 AdjustedMovementAcceleration(Vector3 movementAcceleration)
+	{
+		movementAcceleration *= _settings.movementAcceleration;
+		movementAcceleration.x *= _settings.horizontalAccelerationWeight;
+		movementAcceleration.z *= _settings.verticalAccelerationWeight;
+		return movementAcceleration;
 	}
 
 	private void HandleCameraAndBodyRotation()
@@ -153,7 +148,7 @@ public class PlayerMotor : MonoBehaviour
 		var mouse = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
 		
 		// clamp the extents of the cameras up and down look axis
-		_cameraRotX = Mathf.Clamp(_cameraRotX - mouse.y, _settings.MinCameraTilt, _settings.MaxCameraTilt);
+		_cameraRotX = Mathf.Clamp(_cameraRotX - mouse.y, _settings.minCameraTilt, _settings.maxCameraTilt);
 		
 		// rotate the player around the y axis
 		transform.Rotate(0, mouse.x, 0);

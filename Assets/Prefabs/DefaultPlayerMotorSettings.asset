@@ -12,16 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 756194101614c7d45a9da20d26368688, type: 3}
   m_Name: DefaultPlayerMotorSettings
   m_EditorClassIdentifier: 
-  LockCursorOnAwake: 1
-  LockCursorOnFocus: 1
-  CanJump: 1
-  MovementSpeed: 6
-  VerticalMovementWeight: 1
-  HorizontalMovementWeight: 0.8
-  JumpKey: 32
-  JumpForce: 2
-  Gravity: 9.8
-  airFriction: 3
-  groundFriction: 20
-  MinCameraTilt: -90
-  MaxCameraTilt: 90
+  lockCursorOnAwake: 1
+  lockCursorOnFocus: 1
+  canJump: 1
+  movementAcceleration: 4
+  verticalAccelerationWeight: 1
+  horizontalAccelerationWeight: 1
+  coefficientOfFrictionOnGround: 0.3
+  coefficientOfFrictionInAir: 0.001
+  coefficientOfFrictionOnSlope: 0.001
+  jumpKey: 32
+  jumpForce: 0.1
+  gravity: 0.2
+  slopeAcceleration: 3
+  groundRaycastDistance: 1
+  groundRaycastRadius: 0.45
+  minCameraTilt: -80
+  maxCameraTilt: 80
